@@ -240,51 +240,174 @@
         return text.match(regex);
     }
 
-    function gettaginfo(tagtext){
-        var tagtext=tagtext;
-        var tag={};
-        if (getCharCount(tagtext,'#')>0){
-            var sp=tagtext.split('#');
-            tagtext=sp[0];
-            tag['note']=sp[1];
-        }
+    function gettaginfo(tagtextin){
+        var tag={
+            'name':'',
+            'level':'',
+            'note':'',
+            'mod':[]
+        };
+        var name='';
         var level=0;
-        var name=tagtext;
-        if (getCharCount(tagtext,':')==1&&tagtext[0]!=':'){
-            level=(getContentInside(tagtext,':',')')-1)*20;
-            var left=0,right=tagtext.length;
-            for (i in tagtext){
-                if (tagtext[i]=='{') {left+=1;}
-                else if (tagtext[i]=='[') {left+=1;}
-                else if (tagtext[i]=='(') {left+=1;}
-                else if (tagtext[i]==' ') {left+=1;}
-                else break;
-            }
-            for (i in tagtext){if (tagtext[i]==':') {right=i;}}
-            name=tagtext.substring(left,right);
-        } 
-        else{
-            var left=0,right=tagtext.length;
-            for (i in tagtext){
-                if (tagtext[i]=='{') {level+=1;left+=1;right-=1;}
-                else if (tagtext[i]=='[') {level-=1;left+=1;right-=1;}
-                else if (tagtext[i]=='(') {level+=2;left+=1;right-=1;}
-                else if (tagtext[i]==' ') {left+=1;}
-                else break;
-            }
-            name=tagtext.substring(left,right);
-        }
-        var right=name.length;
-            for (var i=name.length-1;i>=0;i--){
-                if (tagtext[i]=='}') {right-=1;}
-                else if (tagtext[i]==']') {right-=1;}
-                else if (tagtext[i]==' ') {right-=1;}
-                else break;
-            }
-            name=name.substring(0,right);
-        let namestr=name.toString();
-        words=namestr.split(' ');
         var mod=[];
+        var tagtext=tagtextin;
+        var notesp=tagtext.split('#');
+        if (notesp.length>1) {
+            tagtext=notesp[0];
+            tag['note']=notesp[1];
+        }
+        var len=tagtext.length;
+        var symbolleft=[];
+        var symboltext=[];
+        var leftoff=0,rightoff=len;
+        var symbolcp={
+            '(':')',
+            '{':'}',
+            '[':']'
+        };
+        var words=[];
+        var word='';
+        var step=0;
+        var midword='';
+        var leveltext='';
+        // |0|        1      |  2  |3|  4 |   
+        // [{(text text(text):level)}]#note
+        for (var i=0;i<len;i++){
+            switch(tagtext[i]){
+                case '{':
+                case '[':
+                case '(':
+                    if(step<=0) symbolleft.push(tagtext[i]);
+                    else if(step==1){
+                        symboltext.push(tagtext[i]);
+                        word=word+tagtext[i];
+                        break;
+                    }
+                case ' ':
+                    if(step<=0) leftoff+=1;
+                    else if(step==1) {
+                        if (word.length>0){
+                            words.push(word);
+                            word='';
+                        }
+                    }else if (step==2) {
+                        if (midword.length==0) break;
+                        var reg = /^[0-9]+.?[0-9]*/;
+                        if (reg.test(midword)){
+                            if (word.length>0){
+                            words.push(word);
+                            word='';
+                        }
+                            leveltext=midword;
+                            step=3;
+                        }else{
+                            word=word+':'+midword;
+                            words.push(word);
+                            word='';
+                            midword='';
+                            step=1;
+                        }
+                    }
+                    break;
+                case ':':
+                    if (step<=0) {
+                        step=2;
+                    }
+                    if(step==1) {
+                        step=2;
+                        break;
+                    }else if (step==2){
+                        var reg = /^[0-9]+.?[0-9]*/;
+                        if (reg.test(midword)){
+                            if (word.length>0){
+                            words.push(word);
+                            word='';
+                        }
+                            leveltext=midword;
+                            step=3;
+                        }else{
+                            word=word+':'+midword;
+                            words.push(word);
+                            word='';
+                            midword='';
+                            step=2;
+                        }
+                    }
+                    break;
+                case '}':
+                case ']':
+                case ')':
+                    if (step==2){
+                        var reg = /^[0-9]+.?[0-9]*/;
+                        // console.log(midword,typeof midword);
+                        if (reg.test(midword)){
+                            if (word.length>0){
+                            words.push(word);
+                            word='';
+                        }
+                            leveltext=midword;
+                            step=3;
+                        }else{
+                            word=word+':'+midword;
+                            midword='';
+                            step=1;
+                        }
+                    }
+                    if (step==1){
+                        if (symboltext.length>0&&symbolcp[symboltext[symboltext.length-1]]==tagtext[i]){
+                            word=word+tagtext[i];
+                            symboltext.pop();
+                            break;
+                        }else{
+                            console.log(word);
+                            words.push(word);
+                            word='';
+                            step=3;
+                        }
+                    }
+                    if (step=3){
+                        if (symbolcp[symbolleft[symbolleft.length-1]]==tagtext[i]){
+                            switch(symbolleft.pop()){
+                                case '{':
+                                    level+=1;
+                                    break;
+                                case '[':
+                                    level-=1;
+                                    break;
+                                case '(':
+                                    level+=2;
+                                    break;
+                            }
+                        }
+                    }
+
+                default:
+                    if (step<=0) {
+                        step=1;
+                    }
+                    if (step==1){
+                        word=word+tagtext[i];
+                    }else if(step==2){
+                        midword=midword+tagtext[i];
+                    }
+            }
+        }
+        var reg = /^[0-9]+.?[0-9]*/;
+        if (midword!=''&&reg.test(midword)){
+            if (word.length>0){
+                words.push(word);
+                word='';
+            }
+            leveltext=midword;
+        }else{
+            word=word+':'+midword;
+            midword='';
+        }
+        if (word!='') words.push(word);
+        if (leveltext!=''){
+            level=(leveltext-1)*20;
+        }
+        console.log('2:',words,level,mod,tag['note']);
         if (words.length>1){
             for (modlist in data['modification']){
                 for (i in data['modification'][modlist]){
@@ -295,13 +418,12 @@
                     }
                 }
             }
-            namestr=words2tag(words,' ');
-            if (namestr=='') namestr=name.toString();
         }
-        tag['name']=namestr;
+        name=words2tag(words,' ');
+        tag['name']=name;
         tag['level']=level;
         tag['mod']=mod;
-        // console.log(tag);
+        console.log('3:',name,level,mod);
         return tag;
     }
 
@@ -311,7 +433,7 @@
         if(len<1) return tag;
         tag+=words[0];
         for (var i=1;i<len;i++){
-            tag+=separator+words[i];
+            if(words[i]!='') tag+=separator+words[i];
         }
         return tag;
     }
@@ -320,7 +442,7 @@
         var level=tag['level'];
         var name=tag['name'];
         var mod=tag['mod'];
-        if (withnote&&tag['note']!=null) name=name+'#'+tag['note'];
+        if (withnote&&tag['note']!=null&&tag['note'].length>0) name=name+'#'+tag['note'];
         var tagtext=name;
         if (mod.length>0){
             mod.push(name);

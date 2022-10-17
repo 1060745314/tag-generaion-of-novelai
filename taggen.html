@@ -240,6 +240,8 @@
         return text.match(regex);
     }
 
+    // *********WARNING*********
+    // ******ugly function******
     function gettaginfo(tagtextin){
         var tag={
             'name':'',
@@ -282,6 +284,10 @@
                         symboltext.push(tagtext[i]);
                         word=word+tagtext[i];
                         break;
+                    }else if(step==2){
+                        symboltext.push(tagtext[i]);
+                        midword=midword+tagtext[i];
+                        break;
                     }
                 case ' ':
                     if(step<=0) leftoff+=1;
@@ -311,7 +317,9 @@
                     break;
                 case ':':
                     if (step<=0) {
-                        step=2;
+                        word=word+tagtext[i];
+                        step=1;
+                        break;
                     }
                     if(step==1) {
                         step=2;
@@ -359,7 +367,6 @@
                             symboltext.pop();
                             break;
                         }else{
-                            console.log(word);
                             words.push(word);
                             word='';
                             step=3;
@@ -391,23 +398,25 @@
                         midword=midword+tagtext[i];
                     }
             }
+            // console.log(words,word,midword,step,symbolleft,symboltext,leveltext);
         }
         var reg = /^[0-9]+.?[0-9]*/;
-        if (midword!=''&&reg.test(midword)){
-            if (word.length>0){
-                words.push(word);
-                word='';
-            }
+        if (midword!=''){
+            if (reg.test(midword)){
+                if (word.length>0){
+                    words.push(word);
+                    word='';
+                }
             leveltext=midword;
-        }else{
-            word=word+':'+midword;
-            midword='';
+            }else{
+                word=word+':'+midword;
+                midword='';
+            }
         }
         if (word!='') words.push(word);
         if (leveltext!=''){
             level=(leveltext-1)*20;
         }
-        console.log('2:',words,level,mod,tag['note']);
         if (words.length>1){
             for (modlist in data['modification']){
                 for (i in data['modification'][modlist]){
@@ -423,7 +432,7 @@
         tag['name']=name;
         tag['level']=level;
         tag['mod']=mod;
-        console.log('3:',name,level,mod);
+        // console.log('3:',name,level,mod,tag['note']);
         return tag;
     }
 
@@ -442,20 +451,19 @@
         var level=tag['level'];
         var name=tag['name'];
         var mod=tag['mod'];
-        if (withnote&&tag['note']!=null&&tag['note'].length>0) name=name+'#'+tag['note'];
         var tagtext=name;
         if (mod.length>0){
             mod.push(name);
             tagtext=words2tag(mod,' ');
         }
         var symb=['{','}','{{','}}','{{{','}}}','((','))'];
-        if (level==0) return tagtext;
-        if (level<0) {
+        if (level==0) {}
+        else if (level<0) {
             for (var i=0;i>level;i--) tagtext='['+tagtext+']';
-            return tagtext;
         }
-        if (level>0&&level<5) tagtext=symb[level*2-2]+name+symb[level*2-1];
+        else if (level>0&&level<5) tagtext=symb[level*2-2]+name+symb[level*2-1];
         else tagtext='('+name+':'+(level/20+1.0).toFixed(2)+')';
+        if (withnote&&tag['note']!=null&&tag['note'].length>0) tagtext=tagtext+'#'+tag['note'];
         return tagtext;
     }
 
@@ -593,7 +601,6 @@
     function add_mod_to_tag(text){
         var tagtext=$("#tagsettext").val();
         var tag=gettaginfo(tagtext);
-        console.log(tag);
         tag['mod'].push(text);
         tagtext=getrealtag(tag);
         $("#tagsettext").val(tagtext);

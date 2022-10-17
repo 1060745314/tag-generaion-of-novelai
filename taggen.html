@@ -507,6 +507,7 @@
                 $(cpunit).find(".tagtext").html(itemlist[i]);
                 $(cpunit).appendTo($("#"+boxarea+"area ."+boxtype))
                 cpunit.show();
+                cpunit.parent().scrollTop(cpunit.parent().scrollTop()+cpunit.offset().top);
             }
         }else{
             if (boxtype=='selectbox'){

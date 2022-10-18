@@ -462,8 +462,8 @@
         else if (level<0) {
             for (var i=0;i>level;i--) tagtext='['+tagtext+']';
         }
-        else if (level>0&&level<5) tagtext=symb[level*2-2]+name+symb[level*2-1];
-        else tagtext='('+name+':'+(level/20+1.0).toFixed(2)+')';
+        else if (level>0&&level<5) tagtext=symb[level*2-2]+tagtext+symb[level*2-1];
+        else tagtext='('+tagtext+':'+(level/20+1.0).toFixed(2)+')';
         if (withnote&&tag['note']!=null&&tag['note'].length>0) tagtext=tagtext+'#'+tag['note'];
         return tagtext;
     }
@@ -663,7 +663,7 @@
     function taglevel(obj,offset){
         var unit=$(obj).parents(".tagunit");
         var tagtext=unit.find(".tagtext").html();
-        tag=gettaginfo(tagtext);
+        var tag=gettaginfo(tagtext);
         tag['level']=tag['level']+offset;
         tagtext=getrealtag(tag);
         unit.find(".tagtext").html(tagtext);

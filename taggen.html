@@ -4,12 +4,12 @@
         <meta charset="utf-8">
         <title>tag生成</title>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <!-- <script src="https://myproj.obs.cn-east-3.myhuaweicloud.com/NovelaiTag/data.js"></script> -->
+        <script src="https://myproj.obs.cn-east-3.myhuaweicloud.com/NovelaiTag/data.js"></script>
         <script src="data.js"></script>
     </head>
     <body style="height: 100%;width: 100%;display: inline-block;overflow: hidden;background-color: white;">
-        <div id="inputarea" style="display: block;width: 100%;height: 78%;overflow: hidden;">
-            <div style="display: inline-block;width: 20%;height: 100%;overflow: hidden;">
+        <div id="inputarea" style="display: block;width: 100%;height: 78%;overflow-x: scroll;">
+            <div class="columnblock">
                 
                 <div id="featurearea" class="selectarea" style="display: block;width: 100%;height: 100%;">
                     <label >特征tag</label>
@@ -25,7 +25,7 @@
                     </div>
                 </div>
             </div>
-            <div style="display: inline-block;width: 20%;height: 100%;overflow: hidden;">
+            <div class="columnblock">
                 
                 <div id="compositionarea" class="selectarea" style="display: block;width: 100%;height: 66%;">
                     <label >场景构图tag</label>
@@ -55,7 +55,7 @@
                     </div>
                 </div>
             </div>
-            <div style="display: inline-block;width: 20%;height: 100%;overflow: hidden;">
+            <div class="columnblock">
                 <div id="presetarea" class="selectarea" style="display: block;width: 100%;height: 50%;">
                     <label >预设tag</label>
                     <div class="selectareain" style="display: inline-flex;width: 100%;height: 94%;">
@@ -102,7 +102,7 @@
                     </div>
                 </div> -->
             </div>
-            <div style="display: inline-block;width: 19%;height: 100%;overflow: hidden;">
+            <div class="columnblock">
                 <div id="positiveresultarea" class="selectarea" style="display: inline-block;width: 100%;height: 100%;">
                     <label >结果</label>
                     <div class="selectareain" style="display: inline-flex;width: 100%;height: 95%;">
@@ -118,7 +118,7 @@
                     </div>
                 </div>
             </div>
-            <div style="display: inline-block;width: 19%;height: 100%;overflow: hidden;">
+            <div class="columnblock">
                 <div id="negativeresultarea" class="selectarea" style="display: inline-block;width: 100%;height: 100%;">
                     <label >负面tag</label>
                     <div class="selectareain" style="display: inline-flex;width: 100%;height: 95%;">
@@ -200,6 +200,7 @@
         .selectblock  button:hover {background-color: rgb(202, 202, 202);}
         .selectblock  button:active {background-color: hsl(0, 0%, 62%)}
         .output {display: block;width: 100%;height: 100%;font-size: 13pt;}
+        .columnblock {display: inline-block;width: 213pt;height: 100%;overflow: hidden;}
         .setwindow { text-align: center;position: absolute; top: 25%; left: 35%; width: 30%; height: 55%;border-width: 2px;background-color: white;border-color: gainsboro;border-style: solid;border-radius: 20px; }
         ::-webkit-scrollbar {display: none; /* Chrome Safari */}
     </style>
@@ -586,6 +587,9 @@
         var output=words2tag(tags,',');
         // console.log(tags,output);
         $("#"+typetext+"output").val(output);
+        // 将内容复制到剪贴板
+        $("#"+typetext+"output").select()
+	    document.execCommand('copy')
     }
 
     function cleanresult(type){
@@ -647,13 +651,14 @@
         index=unit.parent().children().index(unit);
         var soff=unit.offset().top;
         if(offset>0){
-            if (offset<=5){targetindex=index-offset;}
-                else{targetindex=0;}
-                unit.insertBefore(unit.parent().children(".tagunit:eq("+targetindex+")"));
-            }else{
-                if (offset>=-5){targetindex=index-offset;}
-                else{targetindex=unit.parent().children().length-1}
-                unit.insertAfter(unit.parent().children(".tagunit:eq("+targetindex+")"));
+            if (offset<=10){targetindex=(index-offset>0)?index-offset:0;}
+            else{targetindex=0;}
+            unit.insertBefore(unit.parent().children(".tagunit:eq("+targetindex+")"));
+        }else{
+            if (offset>=-10){targetindex=index-offset;}
+            else{targetindex=unit.parent().children().length-1}
+            if (targetindex>unit.parent().children().length-1) {targetindex=unit.parent().children().length-1;}
+            unit.insertAfter(unit.parent().children(".tagunit:eq("+targetindex+")"));
         }
         soff=unit.offset().top-soff;
         soff=unit.parent().scrollTop()+soff;

@@ -15,3 +15,6 @@
 ![img|center](./imgs/addtaglist.gif)
 * 可以使用浏览器的翻译功能进行翻译
 ![img|center](./imgs/translate.gif)
+## 说明
+* 本项目中的预设tag组均为自己手调，使用平台为秋葉aaaki整合的NAIFU版本
+* 请勿将本项目用于商业用途
